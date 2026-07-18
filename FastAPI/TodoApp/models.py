@@ -1,7 +1,7 @@
-from database import Base
+from Core.database import DeclarativeBase
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 
-class Users(Base):
+class Users(DeclarativeBase):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -14,7 +14,7 @@ class Users(Base):
     role = Column(String)
     phone_number = Column(String)
 
-class Todo(Base):
+class Todo(DeclarativeBase):
     __tablename__ = "todo"
 
     id = Column(Integer, primary_key= True, index=True)

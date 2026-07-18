@@ -1,36 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
-from models import Todo
-from sqlalchemy.orm import session
-from database import SessionLocal
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 from starlette import status
-from pydantic import BaseModel, Field
-from .auth import get_current_user
-
-class TodoRequest(BaseModel):
-    title: str = Field(min_length=3)
-    description: str = Field(min_length=5, max_length=50)
-    priority: int = Field(gt=0, lt=6)
-    completed: bool
+from TodoApp.services.TodoService import TodoService
+from TodoApp.dependencies.services import get_todo_service
+from TodoApp.authorization.authDependency import AuthDependency
 
 router = APIRouter(
     prefix='/admin',
     tags=['admin']
 )
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[session, Depends(get_db)]
-user_dependency = Annotated[dict, Depends(get_current_user)]
+user_dependency = Annotated[dict, Depends(AuthDependency.get_current_user)]
+todoService_dependency = Annotated[TodoService, Depends(get_todo_service)]
 
 @router.get('/todo', status_code=status.HTTP_200_OK)
-def read_all(usr: user_dependency, db: db_dependency):
+async def read_all(usr: user_dependency, service: todoService_dependency):
     if usr is None or usr.get('role')!='admin':
         raise HTTPException(status_code=401, detail='Authentication failed')
-    return db.query(Todo).all()
+    return await service.get_all()
